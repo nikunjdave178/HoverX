@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QWidget,QVBoxLayout, QHBoxLayout, QPushButton, QLabel
-from PyQt6.QtCore import Qt, QRect, QPropertyAnimation, QSize
+from PyQt6.QtCore import Qt, QRect, QPropertyAnimation, QSize, QTimer
 from PyQt6.QtGui import QPainter, QColor
 from hoverx.ui.icons import svg_to_icon
 
@@ -105,6 +105,12 @@ class FloatingWidget(QWidget):
         layout.addWidget(self.title_label)
         layout.addWidget(self.artist_label)
 
+        # ---------- Track info update ----------
+        self.track_timer = QTimer(self)
+        self.track_timer.setInterval(1000)  # 1 second
+        self.track_timer.timeout.connect(self.update_track_info)
+        self.track_timer.start()
+
         self.play_btn.clicked.connect(self.controller.play_pause)
         self.next_btn.clicked.connect(self.controller.next)
         self.prev_btn.clicked.connect(self.controller.previous)
@@ -163,3 +169,9 @@ class FloatingWidget(QWidget):
     def resizeEvent(self, event):
         self.content_widget.setGeometry(0, 0, self.width(), self.height())
         super().resizeEvent(event)
+
+    def update_track_info(self):
+        title, artist = self.controller.get_track_info()
+        self.title_label.setText(title)
+        self.artist_label.setText(artist)
+
