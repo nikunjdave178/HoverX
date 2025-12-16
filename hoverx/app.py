@@ -3,6 +3,12 @@ from PyQt6.QtWidgets import QApplication
 from hoverx.ui.widget import FloatingWidget
 from hoverx.controller.dummy import DummyController
 
+try:
+    from hoverx.controller.windows_smtc import WindowsSMTCController
+    controller = WindowsSMTCController()
+except Exception as e:
+    controller = DummyController()
+
 def main():
     app = QApplication(sys.argv)
 
@@ -10,7 +16,6 @@ def main():
     app.setApplicationName("HoverX")
     app.setOrganizationName("HoverX")
 
-    controller = DummyController()
     widget = FloatingWidget(controller)
     widget.show()
 
