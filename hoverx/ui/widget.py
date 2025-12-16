@@ -3,6 +3,8 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPainter, QColor
 
 class FloatingWidget(QWidget):
+    ICON_SIZE = 56
+
     def __init__(self):
         super().__init__()
         
@@ -14,6 +16,8 @@ class FloatingWidget(QWidget):
         )
         
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+
+        self.setFixedSize(self.ICON_SIZE, self.ICON_SIZE)
         
         # Fixed Size
         self.resize(200, 100)
@@ -22,6 +26,11 @@ class FloatingWidget(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        painter.setBrush(QColor(30, 30, 30, 220))
+        # BG Circle
+        painter.setBrush(QColor(32,32,32,230))
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.drawRoundedRect(self.rect(), 12, 12)
+        painter.drawEllipse(0, 0, self.ICON_SIZE, self.ICON_SIZE)   
+
+        # Temp Glyph
+        painter.setPen(QColor(240, 240, 240))
+        painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "♪")
