@@ -66,6 +66,10 @@ class FloatingWidget(QWidget):
         self.content_widget.hide()
         self.content_widget.setMouseTracking(True)
 
+        self._dragging = False
+        self._drag_offset = None
+        self.content_widget.installEventFilter(self)
+
         # ---------- Layout ----------
         layout = QVBoxLayout(self.content_widget)
         layout.setContentsMargins(12, 10, 12, 10)
@@ -139,18 +143,21 @@ class FloatingWidget(QWidget):
             self.expand()
 
     def leaveEvent(self, event):
-        # IMPORTANT: check global cursor position
-        if not self.geometry().contains(self.mapFromGlobal(self.cursor().pos())):
+        if not self.rect().contains(self.mapFromGlobal(self.cursor().pos())):
             self.collapse()
 
     # ---------- Expand / Collapse ----------
     def expand(self):
+        if self.width() != self.ICON_SIZE:
+            return
         self.content_widget.show()
         self._animate_to(
             QRect(self.x(), self.y(), self.EXPANDED_WIDTH, self.EXPANDED_HEIGHT)
         )
 
     def collapse(self):
+        if self.width() == self.ICON_SIZE:
+            return
         def on_finished():
             try:
                 self._anim.finished.disconnect(on_finished)
@@ -191,7 +198,7 @@ class FloatingWidget(QWidget):
         self.play_btn.setIcon(svg_to_icon(icon_svg, QSize(32, 32)))
 
     def _update_labels(self):
-        if self._raw_title:
+        if self._raw_title and self.title_label.width() > 0:
             metrics = QFontMetrics(self.title_label.font())
             elided = metrics.elidedText(
                 self._raw_title,
@@ -200,7 +207,7 @@ class FloatingWidget(QWidget):
             )
             self.title_label.setText(elided)
 
-        if self._raw_artist:
+        if self._raw_artist and self.artist_label.width() > 0:
             metrics = QFontMetrics(self.artist_label.font())
             elided = metrics.elidedText(
                 self._raw_artist,
@@ -208,6 +215,39 @@ class FloatingWidget(QWidget):
                 self.artist_label.width()
             )
             self.artist_label.setText(elided)
+
+    # ---------- Dragging ----------
+    def eventFilter(self, obj, event):
+        if obj is self.content_widget:
+            if event.type() == event.Type.MouseButtonPress:
+                if event.buttons() & Qt.MouseButton.LeftButton:
+                    # prevent dragging when clicking buttons
+                    if self.content_widget.childAt(event.position().toPoint()):
+                        return False
+
+                    self._dragging = True
+                    self._drag_offset = (
+                        event.globalPosition().toPoint()
+                        - self.frameGeometry().topLeft()
+                    )
+                    return True
+
+            elif event.type() == event.Type.MouseMove:
+                if self._dragging:
+                    self.move(
+                        event.globalPosition().toPoint()
+                        - self._drag_offset
+                    )
+                    return True
+
+            elif event.type() == event.Type.MouseButtonRelease:
+                if self._dragging:
+                    self._dragging = False
+                    return True
+
+        return super().eventFilter(obj, event)
+
+
 
 
 
