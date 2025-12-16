@@ -1,0 +1,4 @@
+pyqt6
+winrt-Windows.System
+winrt.windows.media.control
+winrt.windows.foundation
