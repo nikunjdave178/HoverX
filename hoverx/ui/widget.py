@@ -247,7 +247,9 @@ class FloatingWidget(QWidget):
 
         return super().eventFilter(obj, event)
 
-
+    def closeEvent(self, event):
+        event.ignore()
+        self.hide()
 
 
 
