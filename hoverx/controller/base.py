@@ -18,3 +18,6 @@ class MediaController:
         Returns (title, artist)
         """
         raise NotImplementedError("Subclasses must implement get_track_info method")
+    
+    def is_playing(self) -> bool:
+        raise NotImplementedError("Subclasses must implement is_playing method")

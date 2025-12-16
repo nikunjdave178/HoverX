@@ -175,3 +175,7 @@ class FloatingWidget(QWidget):
         self.title_label.setText(title)
         self.artist_label.setText(artist)
 
+         # Sync play / pause icon
+        icon_svg = PAUSE_SVG if self.controller.is_playing() else PLAY_SVG
+        self.play_btn.setIcon(svg_to_icon(icon_svg, QSize(32, 32)))
+
