@@ -1,6 +1,34 @@
 from PyQt6.QtWidgets import QWidget,QVBoxLayout, QHBoxLayout, QPushButton, QLabel
-from PyQt6.QtCore import Qt, QRect, QPropertyAnimation
+from PyQt6.QtCore import Qt, QRect, QPropertyAnimation, QSize
 from PyQt6.QtGui import QPainter, QColor
+from ui.icons import svg_to_icon
+
+PLAY_SVG = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <path d="M30 25 L30 75 L65 50 Z" fill="#00FFFF"/>
+</svg>
+"""
+
+PAUSE_SVG = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect x="40" y="25" width="6" height="50" fill="#00FFFF"/>
+  <rect x="60" y="25" width="6" height="50" fill="#00FFFF"/>
+</svg>
+"""
+
+NEXT_SVG = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <path d="M30 25 L30 75 L65 50 Z" fill="#00FFFF"/>
+  <rect x="68" y="25" width="6" height="50" fill="#00FFFF"/>
+</svg>
+"""
+
+PREV_SVG = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <path d="M70 25 L70 75 L35 50 Z" fill="#00FFFF"/>
+  <rect x="26" y="25" width="6" height="50" fill="#00FFFF"/>
+</svg>
+"""
 
 
 class FloatingWidget(QWidget):
@@ -43,12 +71,17 @@ class FloatingWidget(QWidget):
         controls = QHBoxLayout()
         controls.addStretch()
 
-        self.prev_btn = QPushButton("⏮")
-        self.play_btn = QPushButton("⏯")
-        self.next_btn = QPushButton("⏭")
+        self.prev_btn = QPushButton()
+        self.play_btn = QPushButton()
+        self.next_btn = QPushButton()
+
+        self.prev_btn.setIcon(svg_to_icon(PREV_SVG, QSize(32, 32)))
+        self.play_btn.setIcon(svg_to_icon(PAUSE_SVG, QSize(32, 32)))
+        self.next_btn.setIcon(svg_to_icon(NEXT_SVG, QSize(32, 32)))
 
         for btn in (self.prev_btn, self.play_btn, self.next_btn):
             btn.setFixedSize(60, 40)
+            btn.setIconSize(QSize(32, 32))
             btn.setStyleSheet(
                 "QPushButton { background: rgba(255,255,255,0.08); border-radius: 8px; }"
                 "QPushButton:hover { background: rgba(255,255,255,0.16); }"
