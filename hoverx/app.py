@@ -1,5 +1,6 @@
 import sys
 from PyQt6.QtWidgets import QApplication
+from ui.widget import FloatingWidget
 
 def main():
     app = QApplication(sys.argv)
@@ -7,6 +8,9 @@ def main():
     # App-level metadata
     app.setApplicationName("HoverX")
     app.setOrganizationName("HoverX")
+
+    widget = FloatingWidget()
+    widget.show()
 
     sys.exit(app.exec())
 
