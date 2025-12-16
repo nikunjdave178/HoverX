@@ -172,10 +172,14 @@ class FloatingWidget(QWidget):
 
     def update_track_info(self):
         title, artist = self.controller.get_track_info()
-        self.title_label.setText(title)
-        self.artist_label.setText(artist)
+        if title:
+            self.title_label.setText(title)
+        if artist:
+            self.artist_label.setText(artist)
 
-         # Sync play / pause icon
-        icon_svg = PAUSE_SVG if self.controller.is_playing() else PLAY_SVG
+
+        # Sync play / pause icon
+        playing = self.controller.is_playing()
+        icon_svg = PAUSE_SVG if playing else PLAY_SVG
         self.play_btn.setIcon(svg_to_icon(icon_svg, QSize(32, 32)))
 
