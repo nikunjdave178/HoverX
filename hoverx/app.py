@@ -1,6 +1,7 @@
 import sys
 from PyQt6.QtWidgets import QApplication
-from ui.widget import FloatingWidget
+from hoverx.ui.widget import FloatingWidget
+from hoverx.controller.dummy import DummyController
 
 def main():
     app = QApplication(sys.argv)
@@ -9,7 +10,8 @@ def main():
     app.setApplicationName("HoverX")
     app.setOrganizationName("HoverX")
 
-    widget = FloatingWidget()
+    controller = DummyController()
+    widget = FloatingWidget(controller)
     widget.show()
 
     sys.exit(app.exec())

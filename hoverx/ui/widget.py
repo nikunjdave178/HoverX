@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QWidget,QVBoxLayout, QHBoxLayout, QPushButton, QLabel
 from PyQt6.QtCore import Qt, QRect, QPropertyAnimation, QSize
 from PyQt6.QtGui import QPainter, QColor
-from ui.icons import svg_to_icon
+from hoverx.ui.icons import svg_to_icon
 
 PLAY_SVG = """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
@@ -36,8 +36,9 @@ class FloatingWidget(QWidget):
     EXPANDED_WIDTH = 280
     EXPANDED_HEIGHT = 140
 
-    def __init__(self):
+    def __init__(self, controller):
         super().__init__()
+        self.controller = controller
 
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint |
@@ -76,7 +77,7 @@ class FloatingWidget(QWidget):
         self.next_btn = QPushButton()
 
         self.prev_btn.setIcon(svg_to_icon(PREV_SVG, QSize(32, 32)))
-        self.play_btn.setIcon(svg_to_icon(PAUSE_SVG, QSize(32, 32)))
+        self.play_btn.setIcon(svg_to_icon(PLAY_SVG, QSize(32, 32)))
         self.next_btn.setIcon(svg_to_icon(NEXT_SVG, QSize(32, 32)))
 
         for btn in (self.prev_btn, self.play_btn, self.next_btn):
@@ -103,6 +104,10 @@ class FloatingWidget(QWidget):
         layout.addSpacing(6)
         layout.addWidget(self.title_label)
         layout.addWidget(self.artist_label)
+
+        self.play_btn.clicked.connect(self.controller.play_pause)
+        self.next_btn.clicked.connect(self.controller.next)
+        self.prev_btn.clicked.connect(self.controller.previous)
 
     # ---------- Paint (collapsed only) ----------
     def paintEvent(self, event):
