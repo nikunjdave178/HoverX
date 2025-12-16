@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QWidget,QVBoxLayout, QHBoxLayout, QPushButton, QLabel
 from PyQt6.QtCore import Qt, QRect, QPropertyAnimation, QSize, QTimer
-from PyQt6.QtGui import QPainter, QColor
+from PyQt6.QtGui import QPainter, QColor, QFontMetrics
 from hoverx.ui.icons import svg_to_icon
 
 PLAY_SVG = """
@@ -39,6 +39,9 @@ class FloatingWidget(QWidget):
     def __init__(self, controller):
         super().__init__()
         self.controller = controller
+
+        self._raw_title = ""
+        self._raw_artist = ""
 
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint |
@@ -93,13 +96,15 @@ class FloatingWidget(QWidget):
         layout.addLayout(controls)
 
         # Labels
-        self.title_label = QLabel("Track Title")
+        self.title_label = QLabel("")
         self.title_label.setStyleSheet("color: white; font-size: 14px;")
-        self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.title_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.title_label.setWordWrap(False)
 
-        self.artist_label = QLabel("Artist Name")
+        self.artist_label = QLabel("")
         self.artist_label.setStyleSheet("color: #CFCFCF; font-size: 12px;")
-        self.artist_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.artist_label.setAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
+        self.artist_label.setWordWrap(False)
 
         layout.addSpacing(6)
         layout.addWidget(self.title_label)
@@ -169,17 +174,42 @@ class FloatingWidget(QWidget):
     def resizeEvent(self, event):
         self.content_widget.setGeometry(0, 0, self.width(), self.height())
         super().resizeEvent(event)
+        self._update_labels()
 
     def update_track_info(self):
         title, artist = self.controller.get_track_info()
+
         if title:
-            self.title_label.setText(title)
+            self._raw_title = title
+
         if artist:
-            self.artist_label.setText(artist)
+            self._raw_artist = artist
 
+        self._update_labels()
 
-        # Sync play / pause icon
-        playing = self.controller.is_playing()
-        icon_svg = PAUSE_SVG if playing else PLAY_SVG
+        icon_svg = PAUSE_SVG if self.controller.is_playing() else PLAY_SVG
         self.play_btn.setIcon(svg_to_icon(icon_svg, QSize(32, 32)))
+
+    def _update_labels(self):
+        if self._raw_title:
+            metrics = QFontMetrics(self.title_label.font())
+            elided = metrics.elidedText(
+                self._raw_title,
+                Qt.TextElideMode.ElideRight,
+                self.title_label.width()
+            )
+            self.title_label.setText(elided)
+
+        if self._raw_artist:
+            metrics = QFontMetrics(self.artist_label.font())
+            elided = metrics.elidedText(
+                self._raw_artist,
+                Qt.TextElideMode.ElideRight,
+                self.artist_label.width()
+            )
+            self.artist_label.setText(elided)
+
+
+
+
 
