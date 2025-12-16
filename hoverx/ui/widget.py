@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QWidget
 from PyQt6.QtCore import Qt, QRect, QPropertyAnimation
 from PyQt6.QtGui import QPainter, QColor
 
+
 class FloatingWidget(QWidget):
     ICON_SIZE = 56
     EXPANDED_WIDTH = 280
@@ -16,30 +17,35 @@ class FloatingWidget(QWidget):
             Qt.WindowType.Tool
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-
         self.setMouseTracking(True)
 
         self.resize(self.ICON_SIZE, self.ICON_SIZE)
 
+        # Geometry animation
         self._anim = QPropertyAnimation(self, b"geometry")
         self._anim.setDuration(180)
 
-    # ---------- Paint ----------
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        # Content container
+        self.content_widget = QWidget(self)
+        self.content_widget.setGeometry(0, 0, self.EXPANDED_WIDTH, self.EXPANDED_HEIGHT)
+        self.content_widget.setStyleSheet(
+            "background: rgba(28,28,28,240); border-radius: 12px;"
+        )
+        self.content_widget.hide()
+        self.content_widget.setMouseTracking(True)
 
+    # ---------- Paint (collapsed only) ----------
+    def paintEvent(self, event):
         if self.width() == self.ICON_SIZE:
+            painter = QPainter(self)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
             painter.setBrush(QColor(32, 32, 32, 230))
             painter.setPen(Qt.PenStyle.NoPen)
             painter.drawEllipse(0, 0, self.ICON_SIZE, self.ICON_SIZE)
 
             painter.setPen(QColor(240, 240, 240))
             painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "♪")
-        else:
-            painter.setBrush(QColor(28, 28, 28, 240))
-            painter.setPen(Qt.PenStyle.NoPen)
-            painter.drawRoundedRect(self.rect(), 12, 12)
 
     # ---------- Hover ----------
     def enterEvent(self, event):
@@ -47,32 +53,38 @@ class FloatingWidget(QWidget):
             self.expand()
 
     def leaveEvent(self, event):
-        if self.width() != self.ICON_SIZE:
+        # IMPORTANT: check global cursor position
+        if not self.geometry().contains(self.mapFromGlobal(self.cursor().pos())):
             self.collapse()
 
-    # ---------- Animation ----------
+    # ---------- Expand / Collapse ----------
     def expand(self):
-        start = self.geometry()
-        end = QRect(
-            start.x(),
-            start.y(),
-            self.EXPANDED_WIDTH,
-            self.EXPANDED_HEIGHT,
+        self.content_widget.show()
+        self._animate_to(
+            QRect(self.x(), self.y(), self.EXPANDED_WIDTH, self.EXPANDED_HEIGHT)
         )
-        self._animate(start, end)
 
     def collapse(self):
-        start = self.geometry()
-        end = QRect(
-            start.x(),
-            start.y(),
-            self.ICON_SIZE,
-            self.ICON_SIZE,
-        )
-        self._animate(start, end)
+        def on_finished():
+            try:
+                self._anim.finished.disconnect(on_finished)
+            except Exception:
+                pass
+            self.content_widget.hide()
+            self.update()
 
-    def _animate(self, start, end):
+        self._anim.finished.connect(on_finished)
+        self._animate_to(
+            QRect(self.x(), self.y(), self.ICON_SIZE, self.ICON_SIZE)
+        )
+
+    def _animate_to(self, rect):
         self._anim.stop()
-        self._anim.setStartValue(start)
-        self._anim.setEndValue(end)
+        self._anim.setStartValue(self.geometry())
+        self._anim.setEndValue(rect)
         self._anim.start()
+
+    # ---------- Keep content synced ----------
+    def resizeEvent(self, event):
+        self.content_widget.setGeometry(0, 0, self.width(), self.height())
+        super().resizeEvent(event)
