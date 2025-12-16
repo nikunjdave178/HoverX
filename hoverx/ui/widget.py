@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QWidget,QVBoxLayout, QHBoxLayout, QPushButton, QLabel
 from PyQt6.QtCore import Qt, QRect, QPropertyAnimation
 from PyQt6.QtGui import QPainter, QColor
 
@@ -33,6 +33,43 @@ class FloatingWidget(QWidget):
         )
         self.content_widget.hide()
         self.content_widget.setMouseTracking(True)
+
+        # ---------- Layout ----------
+        layout = QVBoxLayout(self.content_widget)
+        layout.setContentsMargins(12, 10, 12, 10)
+        layout.setSpacing(10)
+
+        # Controls row
+        controls = QHBoxLayout()
+        controls.addStretch()
+
+        self.prev_btn = QPushButton("⏮")
+        self.play_btn = QPushButton("⏯")
+        self.next_btn = QPushButton("⏭")
+
+        for btn in (self.prev_btn, self.play_btn, self.next_btn):
+            btn.setFixedSize(60, 40)
+            btn.setStyleSheet(
+                "QPushButton { background: rgba(255,255,255,0.08); border-radius: 8px; }"
+                "QPushButton:hover { background: rgba(255,255,255,0.16); }"
+            )
+            controls.addWidget(btn)
+
+        controls.addStretch()
+        layout.addLayout(controls)
+
+        # Labels
+        self.title_label = QLabel("Track Title")
+        self.title_label.setStyleSheet("color: white; font-size: 14px;")
+        self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.artist_label = QLabel("Artist Name")
+        self.artist_label.setStyleSheet("color: #CFCFCF; font-size: 12px;")
+        self.artist_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        layout.addSpacing(6)
+        layout.addWidget(self.title_label)
+        layout.addWidget(self.artist_label)
 
     # ---------- Paint (collapsed only) ----------
     def paintEvent(self, event):
