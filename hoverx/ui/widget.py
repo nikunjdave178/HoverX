@@ -4,29 +4,30 @@ from PyQt6.QtGui import QPainter, QColor, QFontMetrics
 from hoverx.ui.icons import svg_to_icon
 
 PLAY_SVG = """
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <path d="M30 25 L30 75 L65 50 Z" fill="#00FFFF"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" class="bi bi-play-fill" viewBox="0 0 16 16">
+  <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393"/>
 </svg>
 """
 
 PAUSE_SVG = """
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect x="40" y="25" width="6" height="50" fill="#00FFFF"/>
-  <rect x="60" y="25" width="6" height="50" fill="#00FFFF"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" class="bi bi-pause-fill" viewBox="0 0 16 16">
+  <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5m5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5"/>
 </svg>
 """
 
 NEXT_SVG = """
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <path d="M30 25 L30 75 L65 50 Z" fill="#00FFFF"/>
-  <rect x="68" y="25" width="6" height="50" fill="#00FFFF"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" class="bi bi-fast-forward-fill" viewBox="0 0 16 16">
+  <path d="M7.596 7.304a.802.802 0 0 1 0 1.392l-6.363 3.692C.713 12.69 0 12.345 0 11.692V4.308c0-.653.713-.998 1.233-.696z"/>
+  <path d="M15.596 7.304a.802.802 0 0 1 0 1.392l-6.363 3.692C8.713 12.69 8 12.345 8 11.692V4.308c0-.653.713-.998 1.233-.696z"/>
 </svg>
 """
 
 PREV_SVG = """
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <path d="M70 25 L70 75 L35 50 Z" fill="#00FFFF"/>
-  <rect x="26" y="25" width="6" height="50" fill="#00FFFF"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" class="bi bi-fast-forward-fill" viewBox="0 0 16 16">
+  <g transform="rotate(180 8 8)">
+    <path d="M7.596 7.304a.802.802 0 0 1 0 1.392l-6.363 3.692C.713 12.69 0 12.345 0 11.692V4.308c0-.653.713-.998 1.233-.696z"/>
+    <path d="M15.596 7.304a.802.802 0 0 1 0 1.392l-6.363 3.692C8.713 12.69 8 12.345 8 11.692V4.308c0-.653.713-.998 1.233-.696z"/>
+  </g>
 </svg>
 """
 
@@ -120,7 +121,7 @@ class FloatingWidget(QWidget):
         self.track_timer.timeout.connect(self.update_track_info)
         self.track_timer.start()
 
-        self.play_btn.clicked.connect(self.controller.play_pause)
+        self.play_btn.clicked.connect(self._on_play_clicked)
         self.next_btn.clicked.connect(self.controller.next)
         self.prev_btn.clicked.connect(self.controller.previous)
 
@@ -251,6 +252,15 @@ class FloatingWidget(QWidget):
         event.ignore()
         self.hide()
 
+    def _on_play_clicked(self):
+        self.controller.play_pause()
+
+    def _on_play_clicked(self):
+        # optimistic UI update
+        currently_playing = self.controller.is_playing()
+        icon_svg = PLAY_SVG if currently_playing else PAUSE_SVG
+        self.play_btn.setIcon(svg_to_icon(icon_svg, QSize(32, 32)))
+        self.controller.play_pause()
 
 
 
