@@ -15,14 +15,8 @@ Thumbs.db
 # PyInstaller
 build/
 dist/
+*.spec
 *.spec.bak
-
-
-# PyInstaller
-build/
-dist/
-*.spec.bak
-
 
 # Optional: Python cache in subfolders
 **/__pycache__/
