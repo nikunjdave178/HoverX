@@ -219,8 +219,6 @@ class FloatingWidget(QWidget):
 
         self._raw_title = title or self._raw_title
         self._raw_artist = artist or self._raw_artist
-        print(self._raw_artist)
-        print(self._raw_title)
         self._update_labels()
 
 
