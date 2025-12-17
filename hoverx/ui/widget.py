@@ -1,3 +1,4 @@
+import time
 from PyQt6.QtWidgets import QWidget,QVBoxLayout, QHBoxLayout, QPushButton, QLabel
 from PyQt6.QtCore import Qt, QRect, QPropertyAnimation, QSize, QTimer
 from PyQt6.QtGui import QPainter, QColor, QFontMetrics
@@ -43,6 +44,7 @@ class FloatingWidget(QWidget):
 
         self._raw_title = ""
         self._raw_artist = ""
+        self._manual_toggle_ts = 0.0
 
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint |
@@ -56,7 +58,7 @@ class FloatingWidget(QWidget):
 
         # Geometry animation
         self._anim = QPropertyAnimation(self, b"geometry")
-        self._anim.setDuration(180)
+        self._anim.setDuration(100)
 
         # Content container
         self.content_widget = QWidget(self)
@@ -185,17 +187,18 @@ class FloatingWidget(QWidget):
         self._update_labels()
 
     def update_track_info(self):
+        now = time.perf_counter()
+
+        # skip reconciliation shortly after manual click
+        if now - self._manual_toggle_ts < 0.4:
+            return
+        
         title, artist = self.controller.get_track_info()
-
-        if title:
-            self._raw_title = title
-
-        if artist:
-            self._raw_artist = artist
+        playing = self.controller.is_playing()
 
         self._update_labels()
 
-        icon_svg = PAUSE_SVG if self.controller.is_playing() else PLAY_SVG
+        icon_svg = PAUSE_SVG if playing else PLAY_SVG
         self.play_btn.setIcon(svg_to_icon(icon_svg, QSize(32, 32)))
 
     def _update_labels(self):
@@ -253,13 +256,14 @@ class FloatingWidget(QWidget):
         self.hide()
 
     def _on_play_clicked(self):
-        self.controller.play_pause()
+        self._manual_toggle_ts = time.perf_counter()
 
-    def _on_play_clicked(self):
-        # optimistic UI update
+        # optimistic update
         currently_playing = self.controller.is_playing()
-        icon_svg = PLAY_SVG if currently_playing else PAUSE_SVG
-        self.play_btn.setIcon(svg_to_icon(icon_svg, QSize(32, 32)))
+        self.play_btn.setIcon(
+            self._icon_pause if not currently_playing else self._icon_play
+        )
+
         self.controller.play_pause()
 
 
