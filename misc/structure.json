@@ -1,0 +1,23 @@
+{
+  "hoverx": {
+    "__init__.py": null,
+    "app.py": null,
+    "ui": {
+      "__init__.py": null,
+      "widget.py": null
+    },
+    "tray": {
+      "__init__.py": null,
+      "tray_icon.py": null
+    }
+  },
+  "assets": {
+    "icons": {
+      "hoverx.ico": null
+    }
+  },
+  "README.md": null,
+  "requirements.txt": null,
+  ".gitignore": null,
+  "bootstrap.py": null
+}
