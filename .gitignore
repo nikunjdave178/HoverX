@@ -17,3 +17,12 @@ build/
 dist/
 *.spec.bak
 
+
+# PyInstaller
+build/
+dist/
+*.spec.bak
+
+
+# Optional: Python cache in subfolders
+**/__pycache__/
