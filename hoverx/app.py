@@ -1,4 +1,4 @@
-import sys
+import sys,os
 from PyQt6.QtWidgets import QApplication, QSystemTrayIcon, QMenu
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
@@ -22,7 +22,7 @@ def main():
 
     # ----- System Tray -----
     tray = QSystemTrayIcon(widget)
-    icon = QIcon("assets/icons/icon.svg")
+    icon = QIcon(resource_path("assets/icons/icon.ico"))
     tray.setIcon(icon)  # MUST NOT be empty
     tray.setToolTip("HoverX")
 
@@ -44,6 +44,10 @@ def main():
 
     sys.exit(app.exec())
 
+def resource_path(relative_path):
+    if getattr(sys, "frozen", False):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return relative_path
 
 if __name__ == "__main__":
     main()
