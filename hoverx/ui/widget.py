@@ -86,8 +86,12 @@ class FloatingWidget(QWidget):
         self.play_btn = QPushButton()
         self.next_btn = QPushButton()
 
+        self._icon_play = svg_to_icon(PLAY_SVG, QSize(32, 32))
+        self._icon_pause = svg_to_icon(PAUSE_SVG, QSize(32, 32))
+
+        self._set_play_icon(self.controller.is_playing())
+
         self.prev_btn.setIcon(svg_to_icon(PREV_SVG, QSize(32, 32)))
-        self.play_btn.setIcon(svg_to_icon(PLAY_SVG, QSize(32, 32)))
         self.next_btn.setIcon(svg_to_icon(NEXT_SVG, QSize(32, 32)))
 
         for btn in (self.prev_btn, self.play_btn, self.next_btn):
@@ -104,18 +108,32 @@ class FloatingWidget(QWidget):
 
         # Labels
         self.title_label = QLabel("")
-        self.title_label.setStyleSheet("color: white; font-size: 14px;")
+        self.title_label.setStyleSheet("""
+            QLabel {
+                background: transparent;
+                border: none;
+                color: white;
+                font-size: 14px;
+            }
+        """)
         self.title_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         self.title_label.setWordWrap(False)
 
         self.artist_label = QLabel("")
-        self.artist_label.setStyleSheet("color: #CFCFCF; font-size: 12px;")
+        self.artist_label.setStyleSheet("""
+            QLabel {
+                background: transparent;
+                border: none;
+                color: #CFCFCF;
+                font-size: 12px;
+            }
+        """)
         self.artist_label.setAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
         self.artist_label.setWordWrap(False)
 
         layout.addSpacing(6)
-        layout.addWidget(self.title_label)
-        layout.addWidget(self.artist_label)
+        layout.addWidget(self.title_label, alignment=Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.artist_label, alignment=Qt.AlignmentFlag.AlignCenter)
 
         # ---------- Track info update ----------
         self.track_timer = QTimer(self)
@@ -157,6 +175,7 @@ class FloatingWidget(QWidget):
         self._animate_to(
             QRect(self.x(), self.y(), self.EXPANDED_WIDTH, self.EXPANDED_HEIGHT)
         )
+        QTimer.singleShot(0, self._update_labels)  # force refresh
 
     def collapse(self):
         if self.width() == self.ICON_SIZE:
@@ -189,36 +208,48 @@ class FloatingWidget(QWidget):
     def update_track_info(self):
         now = time.perf_counter()
 
-        # skip reconciliation shortly after manual click
+        # debounce after manual click
         if now - self._manual_toggle_ts < 0.4:
             return
-        
+
         title, artist = self.controller.get_track_info()
         playing = self.controller.is_playing()
 
+        self._set_play_icon(playing)
+
+        self._raw_title = title or self._raw_title
+        self._raw_artist = artist or self._raw_artist
+        print(self._raw_artist)
+        print(self._raw_title)
         self._update_labels()
 
-        icon_svg = PAUSE_SVG if playing else PLAY_SVG
-        self.play_btn.setIcon(svg_to_icon(icon_svg, QSize(32, 32)))
+
+    def _set_play_icon(self, playing: bool):
+        self.play_btn.setIcon(
+            self._icon_pause if playing else self._icon_play
+        )
 
     def _update_labels(self):
-        if self._raw_title and self.title_label.width() > 0:
+        if self._raw_title:
             metrics = QFontMetrics(self.title_label.font())
+            width = max(self.title_label.width(), 200)  # safe minimum
             elided = metrics.elidedText(
                 self._raw_title,
                 Qt.TextElideMode.ElideRight,
-                self.title_label.width()
+                width
             )
             self.title_label.setText(elided)
 
-        if self._raw_artist and self.artist_label.width() > 0:
+        if self._raw_artist:
             metrics = QFontMetrics(self.artist_label.font())
+            width = max(self.artist_label.width(), 200)
             elided = metrics.elidedText(
                 self._raw_artist,
                 Qt.TextElideMode.ElideRight,
-                self.artist_label.width()
+                width
             )
             self.artist_label.setText(elided)
+
 
     # ---------- Dragging ----------
     def eventFilter(self, obj, event):
@@ -258,11 +289,8 @@ class FloatingWidget(QWidget):
     def _on_play_clicked(self):
         self._manual_toggle_ts = time.perf_counter()
 
-        # optimistic update
-        currently_playing = self.controller.is_playing()
-        self.play_btn.setIcon(
-            self._icon_pause if not currently_playing else self._icon_play
-        )
+        # optimistic flip ONLY
+        self._set_play_icon(not self.controller.is_playing())
 
         self.controller.play_pause()
 

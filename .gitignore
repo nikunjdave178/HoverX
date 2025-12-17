@@ -20,3 +20,4 @@ dist/
 
 # Optional: Python cache in subfolders
 **/__pycache__/
+temp.txt
