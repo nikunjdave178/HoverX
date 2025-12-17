@@ -11,3 +11,6 @@ venv/
 # OS junk
 .DS_Store
 Thumbs.db
+
+# Optional: Python cache in subfolders
+**/__pycache__/
