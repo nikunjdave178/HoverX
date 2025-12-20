@@ -4,6 +4,7 @@ from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
 from hoverx.ui.widget import FloatingWidget
 from hoverx.controller.dummy import DummyController
+from hoverx.version import __version__
 
 try:
     from hoverx.controller.windows_smtc import WindowsSMTCController
@@ -12,6 +13,8 @@ except Exception as e:
     controller = DummyController()
 
 def main():
+    print("HoverX version:", __version__)
+
     app = QApplication(sys.argv)
 
     app.setApplicationName("HoverX")
