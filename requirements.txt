@@ -3,3 +3,5 @@ winrt-Windows.System
 winrt.windows.media.control
 winrt.windows.foundation
 pyinstaller
+packaging
+requests
