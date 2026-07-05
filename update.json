@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
-  "url": "https://github.com/nikunjdave178/HoverX/releases/download/v1.1.0/HoverX.exe",
-  "notes": "Initial stable release"
+  "version": "1.2.0",
+  "url": "https://github.com/nikunjdave178/HoverX/releases/download/v1.2.0/HoverX.exe",
+  "notes": "Fix widget getting stuck expanded on fast cursor movement; add volume slider"
 }
