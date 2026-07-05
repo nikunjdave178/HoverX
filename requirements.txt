@@ -5,3 +5,5 @@ winrt.windows.foundation
 pyinstaller
 packaging
 requests
+pycaw
+comtypes

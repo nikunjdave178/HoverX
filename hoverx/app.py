@@ -3,18 +3,15 @@ import os
 import subprocess
 import traceback
 
-from PyQt6.QtWidgets import (
-    QApplication,
-    QSystemTrayIcon,
-    QMenu
-)
-from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import QApplication, QSystemTrayIcon
 from PyQt6.QtCore import QTimer
 
 from hoverx.ui.widget import FloatingWidget
 from hoverx.controller.dummy import DummyController
+from hoverx.tray.tray_icon import build_tray_icon
 from hoverx.updater.checker import check_for_update
 from hoverx.updater.downloader import download_update
+from hoverx.logging_utils import log
 
 
 # --------------------------------------------------
@@ -24,15 +21,6 @@ from hoverx.updater.downloader import download_update
 def app_dir():
     """Directory where HoverX.exe lives"""
     return os.path.dirname(sys.executable)
-
-
-def log(msg):
-    """Very simple updater-safe logging"""
-    try:
-        with open(os.path.join(os.getenv("TEMP"), "hoverx.log"), "a", encoding="utf-8") as f:
-            f.write(msg + "\n")
-    except Exception:
-        pass
 
 
 def cleanup_backup():
@@ -74,20 +62,37 @@ def trigger_update(new_exe_path):
     os._exit(0)
 
 
-def check_and_update():
+def check_and_update(tray: QSystemTrayIcon):
     try:
         update_info = check_for_update()
         if not update_info:
             return
 
-        log("Update available")
+        remote_version = update_info.get("version", "?")
+        log(f"Update available: {remote_version}")
+        tray.showMessage(
+            "HoverX update available",
+            f"Downloading version {remote_version}...",
+            QSystemTrayIcon.MessageIcon.Information,
+        )
 
         new_path = download_update(update_info["url"])
+
+        tray.showMessage(
+            "HoverX",
+            "Update downloaded - restarting to finish updating.",
+            QSystemTrayIcon.MessageIcon.Information,
+        )
         trigger_update(new_path)
 
     except Exception as e:
         log("Update failed:")
         log(traceback.format_exc())
+        tray.showMessage(
+            "HoverX update failed",
+            str(e),
+            QSystemTrayIcon.MessageIcon.Warning,
+        )
 
 
 # --------------------------------------------------
@@ -106,22 +111,12 @@ def main():
     except Exception:
         controller = DummyController()
 
+    app.aboutToQuit.connect(controller.shutdown)
+
     widget = FloatingWidget(controller)
     widget.show()
 
-    tray = QSystemTrayIcon()
-    tray.setParent(app)
-    tray.setIcon(QIcon(resource_path("assets/icons/icon.ico")))
-    tray.setToolTip("HoverX")
-
-    menu = QMenu()
-    menu.addAction("Show HoverX", widget.show)
-    menu.addAction("Hide HoverX", widget.hide)
-    menu.addSeparator()
-    menu.addAction("Exit HoverX", lambda: os._exit(0))
-
-    tray.setContextMenu(menu)
-    tray.show()
+    tray = build_tray_icon(app, widget, resource_path("assets/icons/icon.ico"))
 
     app.setQuitOnLastWindowClosed(False)
 
@@ -129,7 +124,7 @@ def main():
     cleanup_backup()
 
     # Run update check AFTER Qt is stable
-    QTimer.singleShot(0, check_and_update)
+    QTimer.singleShot(0, lambda: check_and_update(tray))
 
     sys.exit(app.exec())
 
