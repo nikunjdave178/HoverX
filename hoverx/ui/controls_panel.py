@@ -1,29 +1,42 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QSlider
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QSlider, QFrame
 from PyQt6.QtCore import Qt, QSize, pyqtSignal
 from PyQt6.QtGui import QFontMetrics
 
 from hoverx.ui.icons import svg_to_icon
-from hoverx.ui.svg_icons import PLAY_SVG, PAUSE_SVG, NEXT_SVG, PREV_SVG, VOLUME_SVG
+from hoverx.ui.marquee_label import MarqueeLabel
+from hoverx.ui.svg_icons import (
+    PLAY_SVG, PAUSE_SVG, PLAY_SVG_DARK, PAUSE_SVG_DARK, NEXT_SVG, PREV_SVG, VOLUME_SVG,
+)
 
-BUTTON_STYLE = (
-    "QPushButton { background: rgba(255,255,255,0.08); border-radius: 8px; }"
-    "QPushButton:hover { background: rgba(255,255,255,0.16); }"
+# The play/pause button carries the primary action, so it gets its own
+# light, filled, circular style; prev/next stay flat and secondary.
+PLAY_BUTTON_STYLE = (
+    "QPushButton { background: rgba(255,255,255,0.92); border-radius: 24px; }"
+    "QPushButton:hover { background: rgba(255,255,255,1.0); }"
+)
+SECONDARY_BUTTON_STYLE = (
+    "QPushButton { background: transparent; border-radius: 20px; }"
+    "QPushButton:hover { background: rgba(255,255,255,0.12); }"
 )
 
 SLIDER_STYLE = """
-QSlider::groove:horizontal {
+QSlider::groove:vertical {
     background: rgba(255,255,255,0.15);
-    height: 4px;
+    width: 4px;
     border-radius: 2px;
 }
-QSlider::sub-page:horizontal {
+QSlider::sub-page:vertical {
     background: rgba(255,255,255,0.6);
     border-radius: 2px;
 }
-QSlider::handle:horizontal {
+QSlider::add-page:vertical {
+    background: rgba(255,255,255,0.15);
+    border-radius: 2px;
+}
+QSlider::handle:vertical {
     background: white;
-    width: 12px;
-    margin: -4px 0;
+    height: 12px;
+    margin: 0 -4px;
     border-radius: 6px;
 }
 """
@@ -36,6 +49,8 @@ class ControlsPanel(QWidget):
     next_clicked = pyqtSignal()
     prev_clicked = pyqtSignal()
     volume_changed = pyqtSignal(int)
+
+    VOLUME_STEP = 5
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -51,67 +66,103 @@ class ControlsPanel(QWidget):
         self._raw_title = ""
         self._raw_artist = ""
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(12, 10, 12, 10)
-        layout.setSpacing(8)
+        outer = QHBoxLayout(self)
+        outer.setContentsMargins(14, 12, 12, 12)
+        outer.setSpacing(10)
+
+        layout = QVBoxLayout()
+        layout.setSpacing(2)
+        outer.addLayout(layout, 1)
 
         # ---------- Transport controls ----------
         controls = QHBoxLayout()
+        controls.setSpacing(10)
         controls.addStretch()
 
         self.prev_btn = QPushButton()
         self.play_btn = QPushButton()
         self.next_btn = QPushButton()
 
-        self._icon_play = svg_to_icon(PLAY_SVG, QSize(32, 32))
-        self._icon_pause = svg_to_icon(PAUSE_SVG, QSize(32, 32))
+        self._icon_play = svg_to_icon(PLAY_SVG_DARK, QSize(20, 20))
+        self._icon_pause = svg_to_icon(PAUSE_SVG_DARK, QSize(20, 20))
         self.play_btn.setIcon(self._icon_play)
+        self.play_btn.setIconSize(QSize(20, 20))
+        self.play_btn.setFixedSize(48, 48)
+        self.play_btn.setStyleSheet(PLAY_BUTTON_STYLE)
 
-        self.prev_btn.setIcon(svg_to_icon(PREV_SVG, QSize(32, 32)))
-        self.next_btn.setIcon(svg_to_icon(NEXT_SVG, QSize(32, 32)))
+        self.prev_btn.setIcon(svg_to_icon(PREV_SVG, QSize(18, 18)))
+        self.next_btn.setIcon(svg_to_icon(NEXT_SVG, QSize(18, 18)))
+        for btn in (self.prev_btn, self.next_btn):
+            btn.setIconSize(QSize(18, 18))
+            btn.setFixedSize(40, 40)
+            btn.setStyleSheet(SECONDARY_BUTTON_STYLE)
 
-        for btn in (self.prev_btn, self.play_btn, self.next_btn):
-            btn.setFixedSize(60, 40)
-            btn.setIconSize(QSize(32, 32))
-            btn.setStyleSheet(BUTTON_STYLE)
-            controls.addWidget(btn)
-
+        controls.addWidget(self.prev_btn)
+        controls.addWidget(self.play_btn)
+        controls.addWidget(self.next_btn)
         controls.addStretch()
         layout.addLayout(controls)
 
         # ---------- Labels ----------
-        self.title_label = QLabel("")
+        layout.addSpacing(12)
+
+        self.title_label = MarqueeLabel()
         self.title_label.setStyleSheet(
-            "QLabel { background: transparent; border: none; color: white; font-size: 14px; }"
+            "QLabel { background: transparent; border: none; color: white;"
+            " font-size: 14px; font-weight: 600; }"
         )
-        self.title_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.title_label.setWordWrap(False)
 
-        self.artist_label = QLabel("")
+        self.artist_label = MarqueeLabel()
         self.artist_label.setStyleSheet(
-            "QLabel { background: transparent; border: none; color: #CFCFCF; font-size: 12px; }"
+            "QLabel { background: transparent; border: none; color: #9A9A9A; font-size: 12px; }"
         )
-        self.artist_label.setAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
+        self.artist_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.artist_label.setWordWrap(False)
 
-        layout.addSpacing(4)
-        layout.addWidget(self.title_label, alignment=Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.artist_label, alignment=Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.title_label)
+        layout.addWidget(self.artist_label)
+        layout.addStretch(1)
 
-        # ---------- Volume ----------
-        volume_row = QHBoxLayout()
+        # ---------- Divider ----------
+        divider = QFrame()
+        divider.setFrameShape(QFrame.Shape.VLine)
+        divider.setStyleSheet("background: rgba(255,255,255,0.10); border: none; max-width: 1px; min-width: 1px;")
+        outer.addWidget(divider)
+
+        # ---------- Volume (vertical, side column) ----------
+        volume_col = QVBoxLayout()
+        volume_col.setSpacing(6)
+
+        self.volume_label = QLabel("0%")
+        self.volume_label.setStyleSheet(
+            "QLabel { background: transparent; border: none; color: #CFCFCF; font-size: 11px; }"
+        )
+        self.volume_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # Fixed width sized to the widest possible value ("100%") - otherwise
+        # the label's natural width shrinks/grows as the digit count changes
+        # (e.g. "5%" vs "100%"), which reflows this whole QHBoxLayout and
+        # visibly shifts the divider every time the volume changes.
+        widest = QFontMetrics(self.volume_label.font()).horizontalAdvance("100%")
+        self.volume_label.setFixedWidth(widest + 4)
+
+        self.volume_slider = QSlider(Qt.Orientation.Vertical)
+        self.volume_slider.setRange(0, 100)
+        self.volume_slider.setSingleStep(self.VOLUME_STEP)
+        self.volume_slider.setPageStep(self.VOLUME_STEP * 2)
+        self.volume_slider.setFixedWidth(20)
+        self.volume_slider.setStyleSheet(SLIDER_STYLE)
+        self.volume_slider.valueChanged.connect(self._on_slider_value_changed)
+
         volume_icon = QLabel()
         volume_icon.setPixmap(svg_to_icon(VOLUME_SVG, QSize(16, 16)).pixmap(16, 16))
         volume_icon.setStyleSheet("background: transparent;")
 
-        self.volume_slider = QSlider(Qt.Orientation.Horizontal)
-        self.volume_slider.setRange(0, 100)
-        self.volume_slider.setStyleSheet(SLIDER_STYLE)
-        self.volume_slider.valueChanged.connect(self.volume_changed.emit)
-
-        volume_row.addWidget(volume_icon)
-        volume_row.addWidget(self.volume_slider)
-        layout.addLayout(volume_row)
+        volume_col.addWidget(self.volume_label, 0, alignment=Qt.AlignmentFlag.AlignHCenter)
+        volume_col.addWidget(self.volume_slider, 1, alignment=Qt.AlignmentFlag.AlignHCenter)
+        volume_col.addWidget(volume_icon, 0, alignment=Qt.AlignmentFlag.AlignHCenter)
+        outer.addLayout(volume_col)
 
         # ---------- Wiring ----------
         self.play_btn.clicked.connect(self.play_pause_clicked.emit)
@@ -134,16 +185,37 @@ class ControlsPanel(QWidget):
         self.volume_slider.blockSignals(True)
         self.volume_slider.setValue(value)
         self.volume_slider.blockSignals(False)
+        self.volume_label.setText(f"{value}%")
 
     def refresh_labels(self):
         if self._raw_title:
-            metrics = QFontMetrics(self.title_label.font())
-            width = max(self.title_label.width(), 200)
-            elided = metrics.elidedText(self._raw_title, Qt.TextElideMode.ElideRight, width)
-            self.title_label.setText(elided)
-
+            self.title_label.setMarqueeText(self._raw_title)
         if self._raw_artist:
-            metrics = QFontMetrics(self.artist_label.font())
-            width = max(self.artist_label.width(), 200)
-            elided = metrics.elidedText(self._raw_artist, Qt.TextElideMode.ElideRight, width)
-            self.artist_label.setText(elided)
+            self.artist_label.setMarqueeText(self._raw_artist)
+
+    def hideEvent(self, event):
+        # Don't burn CPU scrolling marquees while the panel is collapsed/hidden.
+        self.title_label.pause()
+        self.artist_label.pause()
+        super().hideEvent(event)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.title_label.resume()
+        self.artist_label.resume()
+
+    # ---------- Volume interaction ----------
+    def _on_slider_value_changed(self, value: int):
+        self.volume_label.setText(f"{value}%")
+        self.volume_changed.emit(value)
+
+    def wheelEvent(self, event):
+        """Let scrolling anywhere over the expanded panel adjust volume, not
+        just the ~20px-wide slider strip itself."""
+        delta = event.angleDelta().y()
+        if delta == 0:
+            return
+        step = self.VOLUME_STEP if delta > 0 else -self.VOLUME_STEP
+        new_value = max(0, min(100, self.volume_slider.value() + step))
+        self.volume_slider.setValue(new_value)
+        event.accept()

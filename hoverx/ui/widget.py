@@ -12,8 +12,8 @@ HOVER_POLL_MS = 120
 
 class FloatingWidget(QWidget):
     ICON_SIZE = 56
-    EXPANDED_WIDTH = 280
-    EXPANDED_HEIGHT = 180
+    EXPANDED_WIDTH = 320
+    EXPANDED_HEIGHT = 150
 
     def __init__(self, controller):
         super().__init__()
