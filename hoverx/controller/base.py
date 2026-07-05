@@ -21,3 +21,15 @@ class MediaController:
     
     def is_playing(self) -> bool:
         raise NotImplementedError("Subclasses must implement is_playing method")
+
+    def get_volume(self) -> int:
+        """Returns current volume as an int 0-100."""
+        raise NotImplementedError("Subclasses must implement get_volume method")
+
+    def set_volume(self, value: int):
+        """Sets volume, value is an int 0-100."""
+        raise NotImplementedError("Subclasses must implement set_volume method")
+
+    def shutdown(self):
+        """Optional cleanup hook called on app exit. No-op by default."""
+        pass

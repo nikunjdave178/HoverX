@@ -5,6 +5,7 @@ class DummyController(MediaController):
     def __init__(self):
         self._playing = False
         self.track_index = 1
+        self._volume = 50
 
     def play_pause(self):
         self._playing = not self._playing
@@ -23,3 +24,10 @@ class DummyController(MediaController):
 
     def is_playing(self) -> bool:
         return self._playing
+
+    def get_volume(self) -> int:
+        return self._volume
+
+    def set_volume(self, value: int):
+        self._volume = max(0, min(100, value))
+        print(f"VOLUME {self._volume}")
