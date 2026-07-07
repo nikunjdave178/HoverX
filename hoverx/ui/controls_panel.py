@@ -26,11 +26,11 @@ QSlider::groove:vertical {
     border-radius: 2px;
 }
 QSlider::sub-page:vertical {
-    background: rgba(255,255,255,0.6);
+    background: rgba(255,255,255,0.15);
     border-radius: 2px;
 }
 QSlider::add-page:vertical {
-    background: rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.6);
     border-radius: 2px;
 }
 QSlider::handle:vertical {
